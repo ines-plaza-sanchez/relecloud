@@ -1,0 +1,94 @@
+# Pipeline CI/CD de ReleCloud (Azure DevOps)
+# 1) Stage Build_Test: instala dependencias y ejecuta los tests sobre SQLite.
+# 2) Stage Deploy: si los tests pasan y estamos en main, despliega en Azure App Service.
+
+trigger:
+  branches:
+    include:
+      - main
+
+variables:
+  pythonVersion: '3.12'
+  # Nombre de la conexión de servicio de Azure (Project Settings > Service connections)
+  azureServiceConnection: 'relecloud-azure-connection'
+  # Nombre de la Web App de Azure App Service
+  webAppName: 'inesplaza'
+
+stages:
+  # ---------------- BUILD + TESTS ----------------
+  - stage: Build_Test
+    displayName: 'Build y pruebas'
+    jobs:
+      - job: test
+        displayName: 'Instalar dependencias y ejecutar tests'
+        pool:
+          vmImage: 'ubuntu-latest'
+        steps:
+          - task: UsePythonVersion@0
+            inputs:
+              versionSpec: '$(pythonVersion)'
+            displayName: 'Usar Python $(pythonVersion)'
+
+          - script: |
+              python -m venv venv
+              . venv/bin/activate
+              python -m pip install --upgrade pip
+              pip install -r requirements.txt
+            displayName: 'Instalar dependencias'
+
+          - script: |
+              . venv/bin/activate
+              python manage.py test
+            displayName: 'Ejecutar tests (TDD)'
+            env:
+              # Los tests corren sobre SQLite, sin tocar la BD de producción
+              DATABASE_URL: 'sqlite:///test.sqlite3'
+              DJANGO_DEBUG: '0'
+
+          - script: |
+              . venv/bin/activate
+              python manage.py collectstatic --noinput
+            displayName: 'Recopilar ficheros estáticos'
+            env:
+              DATABASE_URL: 'sqlite:///test.sqlite3'
+
+          - task: ArchiveFiles@2
+            displayName: 'Empaquetar la aplicación'
+            inputs:
+              rootFolderOrFile: '$(System.DefaultWorkingDirectory)'
+              includeRootFolder: false
+              archiveType: 'zip'
+              archiveFile: '$(Build.ArtifactStagingDirectory)/app.zip'
+              replaceExistingArchive: true
+
+          - publish: '$(Build.ArtifactStagingDirectory)/app.zip'
+            artifact: 'drop'
+            displayName: 'Publicar artefacto'
+
+  # ---------------- DEPLOY ----------------
+  - stage: Deploy
+    displayName: 'Desplegar en Azure App Service'
+    dependsOn: Build_Test
+    condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
+    jobs:
+      - deployment: deployWeb
+        displayName: 'Desplegar web app'
+        pool:
+          vmImage: 'ubuntu-latest'
+        environment: 'produccion'
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - download: current
+                  artifact: 'drop'
+
+                - task: AzureWebApp@1
+                  displayName: 'Deploy a Azure App Service'
+                  inputs:
+                    azureSubscription: '$(azureServiceConnection)'
+                    appType: 'webAppLinux'
+                    appName: '$(webAppName)'
+                    package: '$(Pipeline.Workspace)/drop/app.zip'
+                    # Migraciones + arranque con gunicorn al iniciar el contenedor
+                    startUpCommand: 'python manage.py migrate --noinput && gunicorn --bind=0.0.0.0 --timeout 600 project.wsgi'
