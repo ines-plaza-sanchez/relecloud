@@ -22,7 +22,12 @@ def about(request):
 
 
 def destinations(request):
-    all_destinations = models.Destination.objects.all()
+    # PT4: ordenar destinos por popularidad (nº de reviews y media)
+    all_destinations = (
+        models.Destination.objects
+        .annotate(num_reviews=Count('reviews'), media=Avg('reviews__rating'))
+        .order_by('-num_reviews', '-media', 'name')
+    )
     return render(request, 'destinations.html', {'destinations': all_destinations})
 
 

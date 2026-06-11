@@ -103,3 +103,21 @@ class PT3ReviewTests(TestCase):
 
     def test_average_rating_zero_without_reviews(self):
         self.assertEqual(self.destination.average_rating(), 0)
+
+
+class PT4PopularityOrderingTests(TestCase):
+    """PT4 (funcional): los destinos se ordenan por popularidad."""
+
+    def setUp(self):
+        self.popular = Destination.objects.create(name='Mars', description='Popular')
+        self.unpopular = Destination.objects.create(name='Pluto', description='Unpopular')
+        user = User.objects.create_user('u', password='pass12345')
+        # Mars recibe 2 reviews, Pluto 0
+        Review.objects.create(author=user, destination=self.popular, rating=5)
+        Review.objects.create(author=user, destination=self.popular, rating=3)
+
+    def test_destinations_ordered_by_number_of_reviews(self):
+        response = self.client.get(reverse('destinations'))
+        destinations = list(response.context['destinations'])
+        self.assertEqual(destinations[0], self.popular)
+        self.assertEqual(destinations[-1], self.unpopular)
