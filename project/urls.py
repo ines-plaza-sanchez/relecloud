@@ -6,6 +6,8 @@ from django.conf.urls.static import static
 urlpatterns = [
     path('', include('relecloud.urls')),
     path('admin/', admin.site.urls),
+    # allauth: login, logout, signup, password reset, etc.
+    path('accounts/', include('allauth.urls')),
 ]
 
 # PT2: servir imágenes subidas en desarrollo

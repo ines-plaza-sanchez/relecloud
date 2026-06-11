@@ -14,7 +14,7 @@
 <body>
     <nav class="navbar navbar-expand-md navbar-dark fixed-top bg-translucent-secondary">
         <img src="{% static 'res/img/small-logo.png' %}" width="60" height="auto" alt="Rocket ship logo" />
-        <a class="navbar-brand tk-elevon" href="#">&nbsp; ReleCloud Space Tourism</a>
+        <a class="navbar-brand tk-elevon" href="{% url 'index' %}">&nbsp; ReleCloud Space Tourism</a>
         <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#mainNavbar"
             aria-controls="mainNavbar" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
@@ -23,7 +23,7 @@
         <div class="collapse navbar-collapse" id="mainNavbar">
             <ul class="navbar-nav ml-auto">
                 <li class="nav-item">
-                    <a class="nav-link" href="{% url 'info_request' %}">Socilit</a>
+                    <a class="nav-link" href="{% url 'info_request' %}">Solicit</a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link" href="{% url 'destinations' %}">Destinations</a>
@@ -31,9 +31,21 @@
                 <li class="nav-item">
                     <a class="nav-link" href="{% url 'about' %}">About</a>
                 </li>
-                {% comment %} <li class="nav-item">
-                    <a class="nav-link" href="#">Login</a>
-                </li> {% endcomment %}
+                {% if user.is_authenticated %}
+                <li class="nav-item">
+                    <span class="nav-link">Hi, {{ user.username }}</span>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'account_logout' %}">Logout</a>
+                </li>
+                {% else %}
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'account_login' %}">Login</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'account_signup' %}">Sign up</a>
+                </li>
+                {% endif %}
             </ul>
         </div>
     </nav>
@@ -53,10 +65,10 @@
         </div>
 
         {% if messages %}
-            {% for message in messages %}'
+            {% for message in messages %}
             <div class="alert alert-{{message.tags}}" role="alert">
                 <p>{{ message }}</p>
-            </div>   
+            </div>
             {% endfor %}
         {% endif %}
 
@@ -68,7 +80,6 @@
                 <div class="col-md-8">
                     {% block content %}
                     <h1 class="display-4 tk-elevon">Lorem Ipsum Dolor</h1>
-                    Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
                     {% endblock %}
                 </div>
             </div>
@@ -76,7 +87,7 @@
     </main>
 
     <footer class="container">
-        <p>&copy; Microsoft 2021</p>
+        <p>&copy; ReleCloud 2026</p>
     </footer>
 </body>
 

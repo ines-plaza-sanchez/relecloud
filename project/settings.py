@@ -23,9 +23,14 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    # --- allauth (cambio "extended") ---
+    'django.contrib.sites',
+    'allauth',
+    'allauth.account',
+    # --- app del proyecto ---
     'crispy_forms',
-    'relecloud.apps.RelecloudConfig',
     'crispy_bootstrap4',
+    'relecloud.apps.RelecloudConfig',
 ]
 
 CRISPY_ALLOWED_TEMPLATE_PACKS = ("bootstrap4",)
@@ -44,6 +49,8 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    # allauth necesita su middleware
+    'allauth.account.middleware.AccountMiddleware',
 ]
 
 ROOT_URLCONF = 'project.urls'
@@ -65,6 +72,23 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'project.wsgi.application'
+
+# --- Autenticación: Django + allauth ---
+AUTHENTICATION_BACKENDS = [
+    'django.contrib.auth.backends.ModelBackend',
+    'allauth.account.auth_backends.AuthenticationBackend',
+]
+
+SITE_ID = 1
+
+LOGIN_REDIRECT_URL = '/'
+ACCOUNT_LOGOUT_REDIRECT_URL = '/'
+
+# Configuración moderna de allauth (>=65)
+ACCOUNT_LOGIN_METHODS = {'username'}
+ACCOUNT_SIGNUP_FIELDS = ['username*', 'email*', 'password1*', 'password2*']
+# Sin verificación por email para no depender de SMTP en el registro
+ACCOUNT_EMAIL_VERIFICATION = 'none'
 
 # Database
 # Prioridad de configuración:
