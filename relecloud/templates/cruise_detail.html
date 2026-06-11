@@ -6,13 +6,42 @@ ReleCloud - {{ cruise }}
 
 {% block content %}
 <h1>{{ cruise }}</h1>
-<p>
-{{ cruise.description }}
-</p>
-<p>You can explore {{ cruise }} on the following cruises:</p>
-<ul class="list-group">
+<p>{{ cruise.description }}</p>
+
+<p><strong>Average rating:</strong> ⭐ {{ average_rating|floatformat:1 }}/5
+   ({{ reviews|length }} reviews)</p>
+
+<p>This cruise visits the following destinations:</p>
+<ul class="list-group mb-4">
     {% for destination in cruise.destinations.all %}
     <a class="list-group-item list-group-item-action" href="{% url 'destination_detail' destination.id %}">{{ destination }}</a>
     {% endfor %}
 </ul>
+
+<h2>Reviews</h2>
+<ul class="list-group mb-4">
+    {% for review in reviews %}
+    <li class="list-group-item">
+        <strong>{{ review.author.username }}</strong> &mdash; ⭐ {{ review.rating }}/5
+        <br>{{ review.comment }}
+        <br><small class="text-muted">{{ review.created_at|date:"d/m/Y" }}</small>
+    </li>
+    {% empty %}
+    <li class="list-group-item">No reviews yet.</li>
+    {% endfor %}
+</ul>
+
+{% if can_review %}
+{% load crispy_forms_tags %}
+<h3>Leave a review</h3>
+<form method="post" action="{% url 'cruise_review' cruise.id %}">
+    {% csrf_token %}
+    {{ review_form|crispy }}
+    <button type="submit" class="btn btn-primary">Submit review</button>
+</form>
+{% elif user.is_authenticated %}
+<p class="text-muted">You can only review cruises you have purchased.</p>
+{% else %}
+<p class="text-muted"><a href="{% url 'account_login' %}">Log in</a> and purchase this cruise to leave a review.</p>
+{% endif %}
 {% endblock content %}
