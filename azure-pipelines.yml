@@ -65,30 +65,3 @@ stages:
             artifact: 'drop'
             displayName: 'Publicar artefacto'
 
-  # ---------------- DEPLOY ----------------
-  - stage: Deploy
-    displayName: 'Desplegar en Azure App Service'
-    dependsOn: Build_Test
-    condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
-    jobs:
-      - deployment: deployWeb
-        displayName: 'Desplegar web app'
-        pool:
-          vmImage: 'ubuntu-latest'
-        environment: 'produccion'
-        strategy:
-          runOnce:
-            deploy:
-              steps:
-                - download: current
-                  artifact: 'drop'
-
-                - task: AzureWebApp@1
-                  displayName: 'Deploy a Azure App Service'
-                  inputs:
-                    azureSubscription: '$(azureServiceConnection)'
-                    appType: 'webAppLinux'
-                    appName: '$(webAppName)'
-                    package: '$(Pipeline.Workspace)/drop/app.zip'
-                    # Migraciones + arranque con gunicorn al iniciar el contenedor
-                    startUpCommand: 'python manage.py migrate --noinput && gunicorn --bind=0.0.0.0 --timeout 600 project.wsgi'
