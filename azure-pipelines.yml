@@ -1,6 +1,6 @@
 # Pipeline CI/CD de ReleCloud (Azure DevOps)
 # 1) Stage Build_Test: instala dependencias y ejecuta los tests sobre SQLite.
-# (El stage de Deploy se anadira cuando exista la conexion de servicio de Azure.)
+# 2) Stage Deploy: si los tests pasan y estamos en main, despliega en Azure App Service.
 
 trigger:
   branches:
@@ -8,9 +8,8 @@ trigger:
       - main
 
 variables:
-  pythonVersion: '3.12'
   azureServiceConnection: 'relecloud-azure-connection'
-  webAppName: 'inesplaza'
+  webAppName: 'relecloud-ines-marcos'
 
 stages:
   # ---------------- BUILD + TESTS ----------------
@@ -56,3 +55,30 @@ stages:
           - publish: '$(Build.ArtifactStagingDirectory)/app.zip'
             artifact: 'drop'
             displayName: 'Publicar artefacto'
+
+  # ---------------- DEPLOY ----------------
+  - stage: Deploy
+    displayName: 'Desplegar en Azure App Service'
+    dependsOn: Build_Test
+    condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
+    jobs:
+      - deployment: deployWeb
+        displayName: 'Desplegar web app'
+        pool:
+          name: 'Default'
+        environment: 'produccion'
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - download: current
+                  artifact: 'drop'
+
+                - task: AzureWebApp@1
+                  displayName: 'Deploy a Azure App Service'
+                  inputs:
+                    azureSubscription: '$(azureServiceConnection)'
+                    appType: 'webAppLinux'
+                    appName: '$(webAppName)'
+                    package: '$(Pipeline.Workspace)/drop/app.zip'
+                    startUpCommand: 'python manage.py migrate --noinput && gunicorn --bind=0.0.0.0 --timeout 600 project.wsgi'
