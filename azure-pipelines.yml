@@ -1,6 +1,6 @@
 # Pipeline CI/CD de ReleCloud (Azure DevOps)
 # 1) Stage Build_Test: instala dependencias y ejecuta los tests sobre SQLite.
-# 2) Stage Deploy: si los tests pasan y estamos en main, despliega en Azure App Service.
+# (El stage de Deploy se anadira cuando exista la conexion de servicio de Azure.)
 
 trigger:
   branches:
@@ -9,9 +9,7 @@ trigger:
 
 variables:
   pythonVersion: '3.12'
-  # Nombre de la conexión de servicio de Azure (Project Settings > Service connections)
   azureServiceConnection: 'relecloud-azure-connection'
-  # Nombre de la Web App de Azure App Service
   webAppName: 'inesplaza'
 
 stages:
@@ -22,15 +20,10 @@ stages:
       - job: test
         displayName: 'Instalar dependencias y ejecutar tests'
         pool:
-          vmImage: 'ubuntu-latest'
+          name: 'Default'
         steps:
-          - task: UsePythonVersion@0
-            inputs:
-              versionSpec: '$(pythonVersion)'
-            displayName: 'Usar Python $(pythonVersion)'
-
           - script: |
-              python -m venv venv
+              python3 -m venv venv
               . venv/bin/activate
               python -m pip install --upgrade pip
               pip install -r requirements.txt
@@ -41,19 +34,18 @@ stages:
               python manage.py test
             displayName: 'Ejecutar tests (TDD)'
             env:
-              # Los tests corren sobre SQLite, sin tocar la BD de producción
               DATABASE_URL: 'sqlite:///test.sqlite3'
               DJANGO_DEBUG: '0'
 
           - script: |
               . venv/bin/activate
               python manage.py collectstatic --noinput
-            displayName: 'Recopilar ficheros estáticos'
+            displayName: 'Recopilar ficheros estaticos'
             env:
               DATABASE_URL: 'sqlite:///test.sqlite3'
 
           - task: ArchiveFiles@2
-            displayName: 'Empaquetar la aplicación'
+            displayName: 'Empaquetar la aplicacion'
             inputs:
               rootFolderOrFile: '$(System.DefaultWorkingDirectory)'
               includeRootFolder: false
@@ -64,4 +56,3 @@ stages:
           - publish: '$(Build.ArtifactStagingDirectory)/app.zip'
             artifact: 'drop'
             displayName: 'Publicar artefacto'
-
