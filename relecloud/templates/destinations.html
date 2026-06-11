@@ -7,15 +7,19 @@ ReleCloud - Destinations
 {% block content %}
 <h1>Cruise destinations</h1>
 <p>
-If you can imagine it, we travel to it! Below is our list of confirmed destinations.
+If you can imagine it, we travel to it! Below is our list of confirmed destinations,
+ordered by popularity (most reviewed first).
 </p>
 <ul class="list-group">
     {% for destination in destinations %}
-    <a class="list-group-item list-group-item-action d-flex align-items-center" href="{% url 'destination_detail' destination.id %}">
+    <a class="list-group-item list-group-item-action" href="{% url 'destination_detail' destination.id %}">
         {% if destination.image %}
-        <img src="{{ destination.image.url }}" alt="{{ destination }}" style="width:64px;height:64px;object-fit:cover;border-radius:8px;margin-right:12px;">
+        <img src="{{ destination.image.url }}" alt="{{ destination }}" width="80" height="60"
+             style="object-fit: cover; margin-right: 10px;" />
         {% endif %}
-        {{ destination }}
+        <strong>{{ destination }}</strong>
+        &mdash; ⭐ {{ destination.media|default:0|floatformat:1 }}/5
+        ({{ destination.num_reviews }} reviews)
     </a>
     {% endfor %}
 </ul>

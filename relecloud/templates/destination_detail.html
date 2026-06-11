@@ -7,15 +7,45 @@ ReleCloud - {{ destination }}
 {% block content %}
 <h1>{{ destination }}</h1>
 {% if destination.image %}
-<img src="{{ destination.image.url }}" alt="{{ destination }}" class="img-fluid mb-3" style="max-height:320px;object-fit:cover;border-radius:12px;">
+<img src="{{ destination.image.url }}" alt="{{ destination }}" class="img-fluid mb-3"
+     style="max-height: 300px;" />
 {% endif %}
-<p>
-{{ destination.description }}
-</p>
+<p>{{ destination.description }}</p>
+
+<p><strong>Average rating:</strong> ⭐ {{ average_rating|floatformat:1 }}/5
+   ({{ reviews|length }} reviews)</p>
+
 <p>You can explore {{ destination }} on the following cruises:</p>
-<ul class="list-group">
+<ul class="list-group mb-4">
     {% for cruise in destination.cruises.all %}
     <a class="list-group-item list-group-item-action" href="{% url 'cruise_detail' cruise.id %}">{{ cruise }}</a>
     {% endfor %}
 </ul>
+
+<h2>Reviews</h2>
+<ul class="list-group mb-4">
+    {% for review in reviews %}
+    <li class="list-group-item">
+        <strong>{{ review.author.username }}</strong> &mdash; ⭐ {{ review.rating }}/5
+        <br>{{ review.comment }}
+        <br><small class="text-muted">{{ review.created_at|date:"d/m/Y" }}</small>
+    </li>
+    {% empty %}
+    <li class="list-group-item">No reviews yet.</li>
+    {% endfor %}
+</ul>
+
+{% if can_review %}
+{% load crispy_forms_tags %}
+<h3>Leave a review</h3>
+<form method="post" action="{% url 'destination_review' destination.id %}">
+    {% csrf_token %}
+    {{ review_form|crispy }}
+    <button type="submit" class="btn btn-primary">Submit review</button>
+</form>
+{% elif user.is_authenticated %}
+<p class="text-muted">You can only review destinations from a cruise you have purchased.</p>
+{% else %}
+<p class="text-muted"><a href="{% url 'account_login' %}">Log in</a> and purchase a cruise to leave a review.</p>
+{% endif %}
 {% endblock content %}
