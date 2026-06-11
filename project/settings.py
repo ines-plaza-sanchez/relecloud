@@ -67,23 +67,32 @@ TEMPLATES = [
 WSGI_APPLICATION = 'project.wsgi.application'
 
 # Database
-# Si existe DATABASE_URL se usa esa (p.ej. sqlite en tests / CI).
-# Si no, se usan las variables de entorno de PostgreSQL (Azure).
+# Prioridad de configuración:
+#   1. DATABASE_URL (p. ej. sqlite en tests / CI)      -> se usa esa
+#   2. Variables DJANGO_DB_* definidas (Azure)         -> PostgreSQL
+#   3. Nada definido (desarrollo local)                -> SQLite automático
 DATABASE_URL = os.getenv("DATABASE_URL")
 if DATABASE_URL:
     DATABASES = {
         "default": dj_database_url.parse(DATABASE_URL, conn_max_age=600)
     }
-else:
+elif os.getenv("DJANGO_DB_HOST"):
     DATABASES = {
         "default": {
             "ENGINE": "django.db.backends.postgresql",
-            "NAME": os.getenv("DJANGO_DB_NAME", "inesbbdd"),
-            "USER": os.getenv("DJANGO_DB_USER", "ines"),
-            "PASSWORD": os.getenv("DJANGO_DB_PASSWORD", "29112003i_"),
-            "HOST": os.getenv("DJANGO_DB_HOST", "inesserver.postgres.database.azure.com"),
+            "NAME": os.getenv("DJANGO_DB_NAME"),
+            "USER": os.getenv("DJANGO_DB_USER"),
+            "PASSWORD": os.getenv("DJANGO_DB_PASSWORD"),
+            "HOST": os.getenv("DJANGO_DB_HOST"),
             "PORT": os.getenv("DJANGO_DB_PORT", "5432"),
             "OPTIONS": {"sslmode": os.getenv("DJANGO_DB_SSLMODE", "require")},
+        }
+    }
+else:
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.sqlite3",
+            "NAME": BASE_DIR / "db.sqlite3",
         }
     }
 
