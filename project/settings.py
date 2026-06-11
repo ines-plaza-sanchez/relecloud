@@ -112,6 +112,10 @@ USE_TZ = True
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
+# --- PT2: archivos de medios (imagenes de destinos) ---
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / "media"
+
 # --- PT1: configuración de correo ---
 # Por defecto (desarrollo) imprime el correo en consola.
 EMAIL_BACKEND = os.getenv(

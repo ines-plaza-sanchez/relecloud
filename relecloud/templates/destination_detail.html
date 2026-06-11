@@ -6,6 +6,9 @@ ReleCloud - {{ destination }}
 
 {% block content %}
 <h1>{{ destination }}</h1>
+{% if destination.image %}
+<img src="{{ destination.image.url }}" alt="{{ destination }}" class="img-fluid mb-3" style="max-height:320px;object-fit:cover;border-radius:12px;">
+{% endif %}
 <p>
 {{ destination.description }}
 </p>

@@ -1,6 +1,6 @@
 from django.db import models
 
-# Create your models here.
+
 class Destination(models.Model):
     name = models.CharField(
         unique=True,
@@ -11,10 +11,18 @@ class Destination(models.Model):
     description = models.TextField(
         max_length=2000,
         null=False,
-        blank=False
+        blank=False,
     )
+    # PT2: cada destino tiene su propia imagen
+    image = models.ImageField(
+        upload_to='destinations/',
+        null=True,
+        blank=True,
+    )
+
     def __str__(self):
         return self.name
+
 
 class Cruise(models.Model):
     name = models.CharField(
@@ -26,14 +34,16 @@ class Cruise(models.Model):
     description = models.TextField(
         max_length=2000,
         null=False,
-        blank=False
+        blank=False,
     )
     destinations = models.ManyToManyField(
         Destination,
-        related_name='cruises'
+        related_name='cruises',
     )
+
     def __str__(self):
         return self.name
+
 
 class InfoRequest(models.Model):
     name = models.CharField(
@@ -45,9 +55,9 @@ class InfoRequest(models.Model):
     notes = models.TextField(
         max_length=2000,
         null=False,
-        blank=False
+        blank=False,
     )
     cruise = models.ForeignKey(
         Cruise,
-        on_delete=models.PROTECT
+        on_delete=models.PROTECT,
     )
