@@ -33,3 +33,16 @@ class PT1InfoRequestEmailTests(TestCase):
             'notes': 'Quiero información',
         })
         self.assertEqual(InfoRequest.objects.count(), 1)
+
+
+class PT2DestinationImageTests(TestCase):
+    """PT2 (funcional): el modelo Destination admite una imagen propia."""
+
+    def test_destination_has_image_field(self):
+        field_names = [f.name for f in Destination._meta.get_fields()]
+        self.assertIn('image', field_names)
+
+    def test_destination_image_can_be_blank(self):
+        # Debe poder crearse sin imagen (campo opcional) sin lanzar error
+        d = Destination.objects.create(name='Moon', description='Our satellite')
+        self.assertFalse(bool(d.image))
