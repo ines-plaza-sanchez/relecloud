@@ -12,7 +12,7 @@ SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "664za+^rz^pv5wqrz44p0yg!@$%vf(jo)ml
 
 DEBUG = os.getenv("DJANGO_DEBUG", "1") == "1"
 
-ALLOWED_HOSTS = ["inesplaza.azurewebsites.net", "localhost", "127.0.0.1"]
+ALLOWED_HOSTS = ["relecloud-ines-marcos-cyffgmf9azhdfxc4.francecentral-01.azurewebsites.net", "localhost", "127.0.0.1"]
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
